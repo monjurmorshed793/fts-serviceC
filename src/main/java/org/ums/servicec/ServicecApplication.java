@@ -1,7 +1,6 @@
 package org.ums.servicec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.catalina.mapper.Mapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,17 +20,17 @@ public class ServicecApplication {
 		SpringApplication.run(ServicecApplication.class, args);
 	}
 
-	@KafkaListener(topics="my_topic",id="serviceC")
-    public void listen(ConsumerRecord<?,?> cr) throws Exception{
+  @KafkaListener(topics = "my_topic")
+  public void listen(ConsumerRecord<?, ?> cr) throws Exception {
 	    if(cr.key().toString().equals("serviceC")){
             logger.info(cr.key().toString());
             logger.info(cr.value().toString());
-            ServiceStatus receivedServiceStatus = (ServiceStatus) cr.value();
-            ServiceStatus serviceStatus = new ServiceStatus();
-            serviceStatus.setParentServiceId(receivedServiceStatus.getServiceId());
-            serviceStatus.setServiceId("serviceC");
-            serviceStatus.setStatus(true);
-            ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper();
+        ServiceStatus receivedServiceStatus = mapper.readValue(cr.value().toString(), ServiceStatus.class);
+        ServiceStatus serviceStatus = new ServiceStatus();
+        serviceStatus.setParentServiceId(receivedServiceStatus.getServiceId());
+        serviceStatus.setServiceId("serviceC");
+        serviceStatus.setStatus(true);
             String jsonObject = mapper.writeValueAsString(mapper);
             template.send("tracker", "serviceC", jsonObject);
         }
